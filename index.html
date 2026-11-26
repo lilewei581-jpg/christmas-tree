@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>✨ 极光碎钻圣诞树 · 精致流光烟花版</title>
   <style>
     * {
@@ -126,6 +126,25 @@
       pointer-events: none;
     }
 
+    .restore-ui-btn {
+      position: fixed;
+      right: calc(24px + env(safe-area-inset-right, 0px));
+      bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+      z-index: 20;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(8px);
+      transition: opacity 0.35s ease, transform 0.35s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+    body.ui-hidden .restore-ui-btn {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+    body.ui-hidden .restore-ui-btn:hover {
+      transform: translateY(-1px);
+    }
+
     @media (max-width: 768px) {
       .hud-top-left {
         top: 12px;
@@ -151,6 +170,10 @@
       .pill-btn {
         padding: 6px 10px;
         font-size: 11px;
+      }
+      .restore-ui-btn {
+        right: calc(16px + env(safe-area-inset-right, 0px));
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px));
       }
       .gesture-toast {
         bottom: 92px;
@@ -1238,6 +1261,7 @@
   </div>
 
   <div class="gesture-toast" id="gesture-toast">🎆 树后烟花升空绽放中...</div>
+  <button class="pill-btn restore-ui-btn" id="btn-restore-ui" aria-label="恢复界面">👁️ 显示界面</button>
 
   <script>
     // =========================================================================
@@ -2161,7 +2185,7 @@
 
     // 手机端智能分区手势：单指在树上划过=炸粒子/画圈烟花；单指在空白=旋转；双指=缩放
     window.addEventListener('touchstart', (e) => {
-      if (e.target.closest('.hud-controls')) return;
+      if (e.target.closest('.hud-controls, #btn-restore-ui')) return;
       if (e.touches.length === 1) {
         const t = e.touches[0];
         const worldPt = screenToTreePlaneWorld(t.clientX, t.clientY);
@@ -2196,6 +2220,7 @@
     }, { passive: true });
 
     window.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.hud-controls, #btn-restore-ui')) return;
       pointerDownPos = { x: e.clientX, y: e.clientY };
     });
 
@@ -2203,7 +2228,7 @@
       if (!pointerDownPos) return;
       const moveDist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
       pointerDownPos = null;
-      if (e.target.closest('.hud-controls')) return;
+      if (e.target.closest('.hud-controls, #btn-restore-ui')) return;
 
       if (moveDist < 8) {
         // 累计有效点击 3 下（不限时），自动触发播放上传的主题歌曲
@@ -2250,6 +2275,10 @@
     document.getElementById('btn-music').addEventListener('click', toggleMusic);
     document.getElementById('btn-hide-ui').addEventListener('click', () => {
       document.body.classList.toggle('ui-hidden');
+    });
+    document.getElementById('btn-restore-ui').addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.body.classList.remove('ui-hidden');
     });
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Space') { e.preventDefault(); triggerRegrow(); }
